@@ -40,7 +40,6 @@ return [
     */
 
     'debug' => env('APP_DEBUG', false),
-
     /*
     |--------------------------------------------------------------------------
     | Application URL
@@ -133,6 +132,9 @@ return [
     | this array to grant expanded functionality to your applications.
     |
     */
+
+
+    'order_ttl' => 30,
 
     'providers' => [
 
