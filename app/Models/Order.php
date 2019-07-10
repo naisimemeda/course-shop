@@ -45,6 +45,8 @@ class Order extends Model
         'ship_status',
         'ship_data',
         'extra',
+        'product_id',
+        'product_sku_id'
     ];
 
     protected $casts = [

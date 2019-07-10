@@ -10,9 +10,22 @@ use App\Models\ProductSku;
 use App\Models\UserAddress;
 use App\Models\Order;
 use Carbon\Carbon;
+use Illuminate\Http\Request;
 
 class OrdersController extends Controller
 {
+    public function index(Request $request)
+    {
+        $orders = Order::query()
+            // 使用 with 方法预加载，避免N + 1问题
+            ->with(['items.product', 'items.productSku'])
+            ->where('user_id', $request->user()->id)
+            ->orderBy('created_at', 'desc')
+            ->paginate();
+
+        return view('orders.index', ['orders' => $orders]);
+    }
+
     public function store(OrderRequest $request)
     {
         $user  = $request->user();
@@ -43,13 +56,12 @@ class OrdersController extends Controller
             foreach ($items as $data) {
                 $sku  = ProductSku::find($data['sku_id']);
                 // 创建一个 OrderItem 并直接与当前订单关联
-                $item = $order->items()->make([
+                $order->items()->make([
                     'amount' => $data['amount'],
                     'price'  => $sku->price,
-                ]);
-                $item->product()->associate($sku->product_id);
-                $item->productSku()->associate($sku);
-                $item->save();
+                    'product_id'=>$sku->product->id,
+                    'product_sku_id'=>$sku->id,
+                ])->save();
                 $totalAmount += $sku->price * $data['amount'];
                 if ($sku->decreaseStock($data['amount']) <= 0) {
                     throw new InvalidRequestException('该商品库存不足');
