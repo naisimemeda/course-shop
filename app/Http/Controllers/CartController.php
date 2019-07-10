@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\AddCartRequest;
 use App\Models\CartItem;
 use App\Models\ProductSku;
+use App\Services\CartService;
 use Illuminate\Http\Request;
 
 class CartController extends Controller
