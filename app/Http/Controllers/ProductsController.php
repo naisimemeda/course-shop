@@ -71,10 +71,11 @@ class ProductsController extends Controller
     public function favor(Product $product, Request $request)
     {
         $user = $request->user();
-        if ($user->favoriteProducts()->contains($product->id)) {
+        if ($user->favoriteProducts()->find($product->id)) {
             return [];
         }
-        $user->favoriteProducts()->sync($product);
+
+        $user->favoriteProducts()->attach($product);
         return [];
     }
 
