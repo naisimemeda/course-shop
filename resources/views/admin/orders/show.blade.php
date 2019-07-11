@@ -67,6 +67,7 @@
             <!-- 订单发货开始 -->
             <!-- 如果订单未发货，展示发货表单 -->
             @if($order->ship_status === \App\Models\Order::SHIP_STATUS_PENDING)
+                @if($order->refund_status !== \App\Models\Order::REFUND_STATUS_SUCCESS)
                 <tr>
                     <td colspan="4">
                         <form action="{{ route('admin.orders.ship', [$order->id]) }}" method="post" class="form-inline">
@@ -94,6 +95,7 @@
                         </form>
                     </td>
                 </tr>
+            @endif
         @else
             <!-- 否则展示物流公司和物流单号 -->
                 <tr>
@@ -111,32 +113,23 @@
 <script>
     $(document).ready(function() {
         // 不同意 按钮的点击事件
-        $('#btn-refund-disagree').click(function() {
-            // Laravel-Admin 使用的 SweetAlert 版本与我们在前台使用的版本不一样，因此参数也不太一样
+        $('#btn-refund-agree').click(function() {
             swal({
-                title: '输入拒绝退款理由',
-                input: 'text',
+                title: '确认要将款项退还给用户？',
+                type: 'warning',
                 showCancelButton: true,
                 confirmButtonText: "确认",
                 cancelButtonText: "取消",
                 showLoaderOnConfirm: true,
-                preConfirm: function(inputValue) {
-                    if (!inputValue) {
-                        swal('理由不能为空', '', 'error')
-                        return false;
-                    }
-                    // Laravel-Admin 没有 axios，使用 jQuery 的 ajax 方法来请求
+                preConfirm: function() {
                     return $.ajax({
                         url: '{{ route('admin.orders.handle_refund', [$order->id]) }}',
                         type: 'POST',
-                        data: JSON.stringify({   // 将请求变成 JSON 字符串
-                            agree: false,  // 拒绝申请
-                            reason: inputValue,
-                            // 带上 CSRF Token
-                            // Laravel-Admin 页面里可以通过 LA.token 获得 CSRF Token
+                        data: JSON.stringify({
+                            agree: true, // 代表同意退款
                             _token: LA.token,
                         }),
-                        contentType: 'application/json',  // 请求的数据格式为 JSON
+                        contentType: 'application/json',
                     });
                 },
                 allowOutsideClick: false
