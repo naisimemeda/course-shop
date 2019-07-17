@@ -6,6 +6,7 @@ use App\Exceptions\InvalidRequestException;
 use App\Models\Category;
 use App\Models\OrderItem;
 use App\Models\Product;
+use App\Services\CategoryService;
 use Illuminate\Http\Request;
 
 class ProductsController extends Controller
@@ -33,7 +34,7 @@ class ProductsController extends Controller
             if ($category->is_directory) {
                 // 则筛选出该父类目下所有子类目的商品
                 $builder->whereHas('category', function ($query) use ($category) {
-                    // 这里的逻辑参考本章第一节
+                    // 这里的逻辑
                     $query->where('path', 'like', $category->path.$category->id.'-%');
                 });
             } else {
@@ -55,7 +56,6 @@ class ProductsController extends Controller
         }
 
         $products = $builder->paginate(16);
-
         return view('products.index', [
             'products' => $products,
             'filters'  => [
