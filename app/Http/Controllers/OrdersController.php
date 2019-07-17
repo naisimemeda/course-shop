@@ -119,6 +119,13 @@ class OrdersController extends Controller
     {
         // 校验订单是否属于当前用户
         $this->authorize('own', $order);
+        if (!$order->paid_at) {
+            throw new InvalidRequestException('该订单未支付，不可退款');
+        }
+        // 众筹订单不允许申请退款
+        if ($order->type === Order::TYPE_CROWDFUNDING) {
+            throw new InvalidRequestException('众筹订单不支持退款');
+        }
         // 判断订单是否已付款
         if (!$order->paid_at) {
             throw new InvalidRequestException('该订单未支付，不可退款');
