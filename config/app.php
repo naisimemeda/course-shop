@@ -67,7 +67,7 @@ return [
     */
 
     'timezone' => 'UTC',
-
+    'ngrok_url' => env('NGROK_URL'),
     /*
     |--------------------------------------------------------------------------
     | Application Locale Configuration
