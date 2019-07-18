@@ -85,11 +85,6 @@
                                     <button type="button" class="btn btn-primary btn-create-order">提交订单</button>
                                 </div>
                             </div>
-                            <div class="form-group">
-                                <div class="offset-sm-3 col-sm-3">
-                                    <button type="button" class="btn btn-primary btn-create-order">提交订单</button>
-                                </div>
-                            </div>
                         </form>
                     </div>
                 </div>
