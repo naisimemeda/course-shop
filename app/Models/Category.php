@@ -11,6 +11,7 @@ class Category extends Model
         'is_directory' => 'boolean',
     ];
 
+
     protected static function boot()
     {
         parent::boot();
