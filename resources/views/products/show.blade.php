@@ -110,8 +110,8 @@
                                 <div class="properties-list">
                                     <div class="properties-list-title">产品参数：</div>
                                     <ul class="properties-list-body">
-                                        @foreach($product->properties as $property)
-                                            <li>{{ $property->name }}：{{ $property->value }}</li>
+                                        @foreach($product->grouped_properties as $name => $values)
+                                            <li>{{ $name }}：{{ join(' ', $values) }}</li>
                                         @endforeach
                                     </ul>
                                 </div>
