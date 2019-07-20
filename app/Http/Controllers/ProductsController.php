@@ -66,6 +66,52 @@ class ProductsController extends Controller
                 ];
             }
         }
+        $propertyFilters = [];
+        if ($filterString = $request->input('filters')) {
+            // 将获取到的字符串用符号 | 拆分成数组
+            $filterArray = explode('|', $filterString);
+            foreach ($filterArray as $filter) {
+                // 将字符串用符号 : 拆分成两部分并且分别赋值给 $name 和 $value 两个变量
+                list($name, $value) = explode(':', $filter);
+                $propertyFilters[$name] = $value;
+                // 添加到 filter 类型中
+                $params['body']['query']['bool']['filter'][] = [
+                    // 由于我们要筛选的是 nested 类型下的属性，因此需要用 nested 查询
+                    'nested' => [
+                        // 指明 nested 字段
+                        'path'  => 'properties',
+                        'query' => [
+                            ['term' => ['properties.name' => $name]],
+                            ['term' => ['properties.value' => $value]],
+                        ],
+                    ],
+                ];
+            }
+        }
+
+        if($search || isset($category)){
+            $params['body']['aggs'] =[
+                'properties' => [
+                    'nested' => [
+                        'path' => 'properties'
+                    ],
+                    'aggs' => [
+                        'properties' => [
+                            'terms' => [
+                                'field' => 'properties.name'
+                            ],
+                            'aggs' => [
+                                'value' => [
+                                    'terms' => [
+                                        'field' => 'properties.value'
+                                    ],
+                                ],
+                            ],
+                        ],
+                    ],
+                ],
+            ];
+        }
         if ($order = $request->input('order', '')) {
             // 是否是以 _asc 或者 _desc 结尾
             if (preg_match('/^(.+)_(asc|desc)$/', $order, $m)) {
@@ -77,6 +123,18 @@ class ProductsController extends Controller
             }
         }
         $result = app('es')->search($params);
+        $properties = [];
+        if (isset($result['aggregations'])){
+            $properties = collect($result['aggregations']['properties']['properties']['buckets'])->map(function ($bucket) {
+                return [
+                    'key'    => $bucket['key'],
+                    'values' => collect($bucket['value']['buckets'])->pluck('key')->all(),
+                ];
+            })->filter(function ($property) use ($propertyFilters) {
+                // 过滤掉只剩下一个值 或者 已经在筛选条件里的属性
+                return count($property['values']) > 1 && !isset($propertyFilters[$property['key']]) ;
+            });;
+        }
         $productIds = collect($result['hits']['hits'])->pluck('_id')->all();
         $products = Product::query()
             ->whereIn('id', $productIds)
@@ -92,6 +150,8 @@ class ProductsController extends Controller
                 'order'  => $order,
             ],
             'category' => $category ?? null,
+            'properties' => $properties,
+            'propertyFilters' => $propertyFilters,
         ]);
     }
 
